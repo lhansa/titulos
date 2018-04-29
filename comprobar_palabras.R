@@ -5,4 +5,4 @@ is.word("thing")
 
 
 
-read_csv("C:/Users/LHANSA/Downloads/Ratings_Warriner_et_al_Spanish.csv")
+read_csv("data/Ratings_Warriner_et_al_Spanish.csv")
