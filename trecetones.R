@@ -2,7 +2,7 @@ library(tidyverse)
 
 ## Lectura de datos ------------------------------------
 
-trecetones <- read_file("C:/Users/LHANSA/Downloads/trecetones_redux.txt",
+trecetones <- read_file("data/trecetones_redux.txt",
                         locale = locale(encoding = "UTF-8"))
 
 cat(trecetones)
