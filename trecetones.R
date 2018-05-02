@@ -1,5 +1,18 @@
 library(tidyverse)
 
+## Funciones --------------------------------------------------
+
+check_common_letters <- function(palabra_hija){
+  
+  comunes <- map2(str_split(posibilidades, ""), 
+                  str_split(palabra_hija, ""), 
+                  `==`) %>% 
+    map_dbl(sum)
+  
+  # return(c(simil = max(comunes), ind = which.max(comunes)))
+  return(max(comunes))
+}
+
 ## Lectura de datos ------------------------------------
 
 trecetones <- read_file("data/trecetones_redux.txt",
@@ -43,49 +56,65 @@ posibilidades <- palabras[which(str_length(palabras) == longitud)]
 set.seed(31818)
 poblacion <- map(1:pop_size, function(i) sample(iniciales, longitud, FALSE)) %>%
   unlist() %>% 
-  matrix(ncol = 6, byrow = TRUE)
+  matrix(ncol = 6, byrow = TRUE) %>% 
+  apply(1, function(x) paste0(x, collapse = ""))
+
+comunes <- map_dbl(poblacion, check_common_letters)
 
 ## Cruces de progenitores --------------------------------------------------------
 
-poblacion_nueva <- c()
+maxiter <- 10
+prob_cruce <- 0.25
 
-for(i in 1:(pop_size/2)){
+while(iter <= maxiter){
   
-  # Progenitores
-  progenitores <- sample.int(pop_size, 2)
+  poblacion_nueva <- c()
   
-  progenitor1 <- paste0(poblacion[progenitores[1], ], collapse = "")
-  progenitor2 <- paste0(poblacion[progenitores[2], ], collapse = "")
+  for(i in 1:(pop_size/2)){
+    
+    # Progenitores
+    progenitores <- sample.int(pop_size, 2, prob = comunes / sum(comunes))
+    
+    # progenitor1 <- paste0(poblacion[progenitores[1], ], collapse = "")
+    # progenitor2 <- paste0(poblacion[progenitores[2], ], collapse = "")
+    
+    progenitor1 <- poblacion[progenitores[1]]
+    progenitor2 <- poblacion[progenitores[2]]
+    
+    # Descendencia
+    
+    if(runif(1) > prob_cruce){ # tienen descendencia
+      
+      descendencia1 <- paste0(
+        str_sub(progenitor1, end = corte), 
+        str_sub(progenitor2, start = corte + 1)
+      )
+      
+      descendencia2 <- paste0(
+        str_sub(progenitor2, end = corte), 
+        str_sub(progenitor1, start = corte + 1)
+      )
+      
+    } else { # no la tienen
+      descendencia1 <- progenitor1
+      descendencia2 <- progenitor2
+    }
+
+    poblacion_nueva <- c(poblacion_nueva, descendencia1, descendencia2)
+    
+  }
   
-  # Descendencia
-  descendencia1 <- paste0(
-    str_sub(progenitor1, end = corte), 
-    str_sub(progenitor2, start = corte + 1)
-  )
+  #' Ahora tengo que ver si la descendencia tiene letras en común 
+  #' con las palabras posibles y cuantificar esa similitud. 
   
-  descendencia2 <- paste0(
-    str_sub(progenitor2, end = corte), 
-    str_sub(progenitor1, start = corte + 1)
-  )
+  # comunes3 <- check_common_letters(descendencia1)
+  # comunes4 <- check_common_letters(descendencia2)
   
-  poblacion_nueva <- c(poblacion_nueva, descendencia1, descendencia2)
+  comunes <- map_dbl(poblacion_nueva, check_common_letters)
   
+  poblacion <- poblacion_nueva
 }
 
-#' Ahora tengo que ver si la descendencia tiene letras en común 
-#' con las palabras posibles y cuantificar esa similitud. 
 
-check_common_letters <- function(palabra_hija){
-  
-  comunes <- map2(str_split(posibilidades, ""), 
-                  str_split(palabra_hija, ""), 
-                  `==`) %>% 
-    map_dbl(sum)
-  
-  return(c(simil = max(comunes), ind = which.max(comunes)))
-}
-
-comunes3 <- check_common_letters(descendencia1)
-comunes4 <- check_common_letters(descendencia2)
 
 
