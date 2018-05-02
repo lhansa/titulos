@@ -49,7 +49,7 @@ poblacion <- map(1:pop_size, function(i) sample(iniciales, longitud, FALSE)) %>%
 
 poblacion_nueva <- c()
 
-for(i in 1:pop_size/2){
+for(i in 1:(pop_size/2)){
   
   # Progenitores
   progenitores <- sample.int(pop_size, 2)
