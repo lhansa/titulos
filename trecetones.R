@@ -14,7 +14,7 @@ palabras <- iconv(str_to_lower(diccionario$Palabra), from = "UTF-8", to = "ASCII
 ## Iniciales -----------------------------------
 
 iniciales <- trecetones %>% 
-  str_split("\r\n") %>% 
+  str_split("\n") %>% 
   flatten_chr() %>% 
   str_replace("^ ", "") %>% 
   str_sub(1L, 1L) %>% 
@@ -45,22 +45,32 @@ poblacion <- map(1:pop_size, function(i) sample(iniciales, longitud, FALSE)) %>%
   unlist() %>% 
   matrix(ncol = 6, byrow = TRUE)
 
-# Progenitores
-progenitores <- sample.int(pop_size, 2)
+## Cruces de progenitores --------------------------------------------------------
 
-progenitor1 <- paste0(poblacion[progenitores[1], ], collapse = "")
-progenitor2 <- paste0(poblacion[progenitores[2], ], collapse = "")
+poblacion_nueva <- c()
 
-# Descendencia
-descendencia1 <- paste0(
-  str_sub(progenitor1, end = corte), 
-  str_sub(progenitor2, start = corte + 1)
-)
-
-descendencia2 <- paste0(
-  str_sub(progenitor2, end = corte), 
-  str_sub(progenitor1, start = corte + 1)
-)
+for(i in 1:pop_size/2){
+  
+  # Progenitores
+  progenitores <- sample.int(pop_size, 2)
+  
+  progenitor1 <- paste0(poblacion[progenitores[1], ], collapse = "")
+  progenitor2 <- paste0(poblacion[progenitores[2], ], collapse = "")
+  
+  # Descendencia
+  descendencia1 <- paste0(
+    str_sub(progenitor1, end = corte), 
+    str_sub(progenitor2, start = corte + 1)
+  )
+  
+  descendencia2 <- paste0(
+    str_sub(progenitor2, end = corte), 
+    str_sub(progenitor1, start = corte + 1)
+  )
+  
+  poblacion_nueva <- c(poblacion_nueva, descendencia1, descendencia2)
+  
+}
 
 #' Ahora tengo que ver si la descendencia tiene letras en común 
 #' con las palabras posibles y cuantificar esa similitud. 
@@ -75,6 +85,7 @@ check_common_letters <- function(palabra_hija){
   return(c(simil = max(comunes), ind = which.max(comunes)))
 }
 
-comunes3 <- check_common_letters(palabra3)
-comunes4 <- check_common_letters(palabra4)
+comunes3 <- check_common_letters(descendencia1)
+comunes4 <- check_common_letters(descendencia2)
+
 
