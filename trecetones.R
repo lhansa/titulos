@@ -1,16 +1,22 @@
 library(tidyverse)
 
+## Pendiente usar stringdist
+
 ## Funciones --------------------------------------------------
 
-check_common_letters <- function(palabra_hija){
+check_common_letters <- function(palabra_hija, con_ind = FALSE){
   
   comunes <- map2(str_split(posibilidades, ""), 
                   str_split(palabra_hija, ""), 
                   `==`) %>% 
     map_dbl(sum)
   
-  # return(c(simil = max(comunes), ind = which.max(comunes)))
-  return(max(comunes))
+  if(con_ind){
+    return(c(simil = max(comunes), ind = which.max(comunes)))  
+  } else {
+    return(max(comunes))
+  }
+  
 }
 
 ## Lectura de datos ------------------------------------
@@ -44,12 +50,17 @@ iniciales <- trecetones %>%
 #     sample(iniciales, size = n, replace = FALSE)
 #   })
 
-## Algoritmo genético ---------------------------------------------
+## Parámetros ---------------------------------------------
 
 longitud <- 6
-corte <- floor(longitud/2)
 
-pop_size <- 100
+pop_size <- 200
+
+maxiter <- 1000
+prob_cruce <- 0.25
+prob_mutacion <- 0.1
+
+## Inicialización del algoritmo -----------------------------------------
 
 posibilidades <- palabras[which(str_length(palabras) == longitud)]
 
@@ -61,10 +72,9 @@ poblacion <- map(1:pop_size, function(i) sample(iniciales, longitud, FALSE)) %>%
 
 comunes <- map_dbl(poblacion, check_common_letters)
 
-## Cruces de progenitores --------------------------------------------------------
+iter <- 1
 
-maxiter <- 10
-prob_cruce <- 0.25
+## Algoritmo genético ---------------------------------------------------
 
 while(iter <= maxiter){
   
@@ -85,6 +95,8 @@ while(iter <= maxiter){
     
     if(runif(1) > prob_cruce){ # tienen descendencia
       
+      corte <- sample.int(1 : (longitud-1)) # Punto de corte de la palabra
+      
       descendencia1 <- paste0(
         str_sub(progenitor1, end = corte), 
         str_sub(progenitor2, start = corte + 1)
@@ -99,7 +111,19 @@ while(iter <= maxiter){
       descendencia1 <- progenitor1
       descendencia2 <- progenitor2
     }
+    
+    # Mutación (pendiente)
+    muta <- function(palabra){
+      for(p in 1:length(palabra)){
+        if(runif(1) > prob_mutacion) str_sub(palabra, p, p) <- sample(letters, 1)    
+      }
+      return(palabra)
+    }
+    
+    descendencia1 <- muta(descendencia1)
+    descendencia2 <- muta(descendencia2)
 
+    # Actualizamos población nueva
     poblacion_nueva <- c(poblacion_nueva, descendencia1, descendencia2)
     
   }
@@ -112,7 +136,16 @@ while(iter <= maxiter){
   
   comunes <- map_dbl(poblacion_nueva, check_common_letters)
   
+  max_common <- max(comunes)
+  mejor <- poblacion_nueva[which.max(comunes)]
+  
+  message(paste0("Iteración: ",iter, ". Mejor palabra (", max_common, "): ", mejor))
+  
+  # Actualizamos la población global
   poblacion <- poblacion_nueva
+  
+  iter <- iter + 1
+  
 }
 
 
